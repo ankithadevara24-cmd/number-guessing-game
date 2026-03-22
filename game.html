@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <title>Number Guessing Game</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&amp;family=JetBrains+Mono:wght@400;600;700&amp;display=swap" rel="stylesheet">
+ 
+
+    <link rel="stylesheet" href="g1.css">
+  <style>body { box-sizing: border-box; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="h-full">
+  <div id="app" class="h-full w-full overflow-auto" style="background: #0a0a1a; font-family: 'Outfit', sans-serif;"><!-- Decorative orbs -->
+   <div class="fixed inset-0 pointer-events-none overflow-hidden" aria-hidden="true">
+    <div class="animate-float absolute rounded-full opacity-20" style="width: 300px; height: 300px; background: radial-gradient(circle, #6366f1, transparent); top: -80px; left: -60px;"></div>
+    <div class="animate-float-delay absolute rounded-full opacity-15" style="width: 250px; height: 250px; background: radial-gradient(circle, #f472b6, transparent); bottom: -50px; right: -40px;"></div>
+    <div class="animate-float-delay2 absolute rounded-full opacity-10" style="width: 200px; height: 200px; background: radial-gradient(circle, #22d3ee, transparent); top: 40%; right: 10%;"></div>
+   </div><!-- Confetti container -->
+   <div id="confetti-container" class="fixed inset-0 pointer-events-none overflow-hidden" aria-hidden="true"></div>
+   <div class="relative z-10 flex items-center justify-center" style="min-height: 100%;">
+    <main class="w-full max-w-md mx-auto p-5"><!-- Card -->
+     <div id="game-card" class="animate-glow rounded-3xl p-7 relative overflow-hidden" style="background: linear-gradient(145deg, rgba(30,30,60,0.95), rgba(15,15,35,0.98)); border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(20px);"><!-- Header -->
+      <header class="text-center mb-6">
+       <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4 animate-float" id="header-icon" style="background: linear-gradient(135deg, #6366f1, #8b5cf6); box-shadow: 0 8px 30px rgba(99,102,241,0.4);"><span style="font-size: 28px;">🎯</span>
+       </div>
+       <h1 id="game-title" class="text-2xl font-bold tracking-tight" style="color: #f0f0ff;">Guess the Number</h1>
+       <p id="subtitle-text" class="mt-1 text-sm font-light" style="color: rgba(200,200,255,0.5);">I'm thinking of a number between 1 and 100</p>
+      </header><!-- Progress ring -->
+      <div class="flex justify-center mb-5">
+       <div class="relative">
+        <svg width="100" height="100" class="transform -rotate-90"><circle cx="50" cy="50" r="42" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="6" /> <circle id="progress-circle" class="progress-ring" cx="50" cy="50" r="42" fill="none" stroke-width="6" stroke-linecap="round" style="stroke: #6366f1; stroke-dasharray: 264; stroke-dashoffset: 264;" />
+        </svg>
+        <div class="absolute inset-0 flex flex-col items-center justify-center"><span id="attempts-count" class="text-2xl font-bold" style="color: #f0f0ff; font-family: 'JetBrains Mono', monospace;">0</span> <span class="text-xs" style="color: rgba(200,200,255,0.4);">tries</span>
+        </div>
+       </div>
+      </div><!-- Input area -->
+      <div class="mb-4"><label for="guessInput" class="sr-only">Enter your guess</label>
+       <div class="relative"><input type="number" id="guessInput" min="1" max="100" placeholder="Enter 1–100" class="game-input w-full text-center text-xl font-semibold rounded-xl py-3.5 px-4 transition-all duration-300" style="background: rgba(255,255,255,0.06); border: 1.5px solid rgba(255,255,255,0.1); color: #f0f0ff; font-family: 'JetBrains Mono', monospace;">
+       </div>
+      </div><!-- Buttons -->
+      <div class="flex gap-3 mb-5"><button id="guess-btn" onclick="checkGuess()" class="guess-btn flex-1 py-3 rounded-xl font-semibold text-white flex items-center justify-center gap-2" style="background: linear-gradient(135deg, #6366f1, #8b5cf6); box-shadow: 0 4px 20px rgba(99,102,241,0.35);"> <i data-lucide="zap" style="width: 18px; height: 18px;"></i> <span>Guess</span> </button> <button onclick="restartGame()" class="guess-btn py-3 px-5 rounded-xl font-medium flex items-center justify-center gap-2 transition-colors" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: rgba(200,200,255,0.7);"> <i data-lucide="rotate-ccw" style="width: 16px; height: 16px;"></i><span>restart</span> </button>
+      </div><!-- Message area -->
+      <div id="message-area" class="text-center mb-4 min-h-[48px] flex items-center justify-center">
+       <p id="message" class="text-sm font-medium" style="color: rgba(200,200,255,0.5);">Take your best shot!</p>
+      </div><!-- Hint bar -->
+      <div id="hint-bar" class="rounded-xl p-3 mb-4 hidden" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);">
+       <div class="flex items-center justify-between text-xs" style="color: rgba(200,200,255,0.4);"><span>1</span>
+        <div class="flex-1 mx-3 h-1.5 rounded-full relative overflow-hidden" style="background: rgba(255,255,255,0.06);">
+         <div id="hint-indicator" class="absolute top-0 h-full rounded-full transition-all duration-500" style="background: linear-gradient(90deg, #6366f1, #8b5cf6); width: 4px;"></div>
+        </div><span>100</span>
+       </div>
+      </div><!-- Guess history -->
+      <div id="history-section" class="hidden">
+       <div class="flex items-center gap-2 mb-2"><i data-lucide="history" style="width: 14px; height: 14px; color: rgba(200,200,255,0.3);"></i> <span class="text-xs font-medium" style="color: rgba(200,200,255,0.3);">Previous Guesses</span>
+       </div>
+       <div id="guess-history" class="guess-history flex flex-wrap gap-2 max-h-24 overflow-y-auto"></div>
+      </div><!-- Win stats -->
+      <div id="win-stats" class="hidden mt-4 text-center rounded-xl p-4" style="background: rgba(34,197,94,0.08); border: 1px solid rgba(34,197,94,0.15);">
+       <p class="text-lg font-bold" style="color: #22d3ee;">🎉 Brilliant!</p>
+       <p id="win-message" class="text-sm mt-1" style="color: rgba(200,200,255,0.6);"></p>
+      </div>
+     </div><!-- Best score -->
+     <div class="text-center mt-4">
+      <p id="best-score" class="text-xs font-medium" style="color: rgba(200,200,255,0.25);"></p>
+     </div>
+    </main>
+   </div>
+  </div>
+  <script src="g2.js">
+  
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9e062349f46a162a',t:'MTc3NDE5MjM4MC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
